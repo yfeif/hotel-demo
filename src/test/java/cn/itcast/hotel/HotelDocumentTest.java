@@ -9,16 +9,15 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.*;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,11 +46,18 @@ class HotelDocumentTest {
         String json = JSON.toJSONString(hotelDoc);
 
         // 1.准备Request
-        IndexRequest request = new IndexRequest("hotel").id(hotelDoc.getId().toString());
+//        IndexRequest request = new IndexRequest("hotel").id(hotelDoc.getId().toString());
+        // 1.准备Request (使用低级别客户端以避免解析错误)
+        Request request = new Request("PUT", "/hotel/_doc/" + hotelDoc.getId().toString());
+        request.setJsonEntity(json);
+        request.addParameter("timeout", "1m");
         // 2.准备请求参数DSL，其实就是文档的JSON字符串
-        request.source(json, XContentType.JSON);
+//        request.source(json, XContentType.JSON);
         // 3.发送请求
-        client.index(request, RequestOptions.DEFAULT);
+//        client.index(request, RequestOptions.DEFAULT);
+        Response response = client.getLowLevelClient().performRequest(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        System.out.println("response = " + responseString);
     }
 
     @Test
@@ -70,21 +76,33 @@ class HotelDocumentTest {
     @Test
     void testDeleteDocumentById() throws IOException {
         // 1.准备Request      // DELETE /hotel/_doc/{id}
-        DeleteRequest request = new DeleteRequest("hotel", "61083");
+//        DeleteRequest request = new DeleteRequest("hotel", "61083");
+        Request request = new Request("DELETE", "/hotel/_doc/61083");
         // 2.发送请求
-        client.delete(request, RequestOptions.DEFAULT);
+//        client.delete(request, RequestOptions.DEFAULT);
+        Response response = client.getLowLevelClient().performRequest(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        System.out.println("response = " + responseString);
     }
 
     @Test
     void testUpdateById() throws IOException {
         // 1.准备Request
-        UpdateRequest request = new UpdateRequest("hotel", "61083");
+//        UpdateRequest request = new UpdateRequest("hotel", "61083");
+        Request request = new Request("POST", "/hotel/_update/61083");
         // 2.准备参数
-        request.doc(
-                "price", "870"
-        );
+//        request.doc(
+//                "price", "870"
+//        );
+        String json = "{\"doc\": {\"price\": \"870\"}}";
+        request.setJsonEntity(json);
+
         // 3.发送请求
-        client.update(request, RequestOptions.DEFAULT);
+//        client.update(request, RequestOptions.DEFAULT);
+        Response response = client.getLowLevelClient().performRequest(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        System.out.println("update response = " + responseString);
+
     }
 
     @Test
@@ -93,19 +111,29 @@ class HotelDocumentTest {
         List<Hotel> list = hotelService.list();
 
         // 1.准备Request
-        BulkRequest request = new BulkRequest();
+//        BulkRequest request = new BulkRequest();
+        Request request = new Request("POST", "/_bulk");
+        StringBuilder bulkRequest = new StringBuilder();
+
         // 2.准备参数
         for (Hotel hotel : list) {
             // 2.1.转为HotelDoc
             HotelDoc hotelDoc = new HotelDoc(hotel);
             // 2.2.转json
             String json = JSON.toJSONString(hotelDoc);
-            // 2.3.添加请求
-            request.add(new IndexRequest("hotel").id(hotel.getId().toString()).source(json, XContentType.JSON));
-        }
+            bulkRequest.append("{ \"index\" : { \"_index\" : \"hotel\", \"_id\" : \"").append(hotel.getId()).append("\" } }\n");
+            bulkRequest.append(json).append("\n");
 
+            // 2.3.添加请求
+//            request.add(new IndexRequest("hotel").id(hotel.getId().toString()).source(json, XContentType.JSON));
+
+        }
         // 3.发送请求
-        client.bulk(request, RequestOptions.DEFAULT);
+        request.setJsonEntity(bulkRequest.toString());
+        Response response = client.getLowLevelClient().performRequest(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        System.out.println("bulk response = " + responseString);
+//        client.bulk(request, RequestOptions.DEFAULT);
     }
 
     @BeforeEach
