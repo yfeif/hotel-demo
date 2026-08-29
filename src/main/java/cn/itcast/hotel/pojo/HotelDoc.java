@@ -23,7 +23,7 @@ public class HotelDoc {
     private String pic;
     private Object distance;
     private Boolean isAD;
-    private List<String> suggestion;
+//    private List<String> suggestion;
 
     public HotelDoc(Hotel hotel) {
         this.id = hotel.getId();
@@ -37,19 +37,19 @@ public class HotelDoc {
         this.business = hotel.getBusiness();
         this.location = hotel.getLatitude() + ", " + hotel.getLongitude();
         this.pic = hotel.getPic();
-        // 自动补全字段的处理
-        this.suggestion = new ArrayList<>();
-        // 添加品牌、城市
-        this.suggestion.add(this.brand);
-        this.suggestion.add(this.city);
-        // 判断商圈是否包含/
-        if (this.business.contains("/")) {
-            // 需要切割
-            String[] arr = this.business.split("/");
-            Collections.addAll(this.suggestion, arr);
-        }else{
-            this.suggestion.add(this.business);
-        }
+//        // 自动补全字段的处理
+//        this.suggestion = new ArrayList<>();
+//        // 添加品牌、城市
+//        this.suggestion.add(this.brand);
+//        this.suggestion.add(this.city);
+//        // 判断商圈是否包含/
+//        if (this.business.contains("/")) {
+//            // 需要切割
+//            String[] arr = this.business.split("/");
+//            Collections.addAll(this.suggestion, arr);
+//        }else{
+//            this.suggestion.add(this.business);
+//        }
 
     }
 }
