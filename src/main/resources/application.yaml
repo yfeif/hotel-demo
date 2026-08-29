@@ -2,16 +2,16 @@ server:
   port: 8089
 spring:
   datasource:
-    url: jdbc:mysql://mysql:3306/heima?useSSL=false
+    url: jdbc:mysql://mysql:3306/data?useSSL=false
     username: root
-    password: 123
+    password: Hzz_2020!@#$
     driver-class-name: com.mysql.jdbc.Driver
-  rabbitmq:
-    host: 192.168.150.101
-    port: 5672
-    username: itcast
-    password: 123321
-    virtual-host: /
+#  rabbitmq:
+#    host: 192.168.150.101
+#    port: 5672
+#    username: itcast
+#    password: 123321
+#    virtual-host: /
 logging:
   level:
     cn.itcast: debug
